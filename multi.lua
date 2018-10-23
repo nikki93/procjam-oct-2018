@@ -14,8 +14,12 @@ function Server:create()
     self.ip = self._sock:getSocketAddress()
     print("Server created at '" .. self.ip .. "'")
 
-    self._sock:on('keypressed', function (data, client)
-        self._sock:sendToAll('keypressed', data)
+    self._sock:on('mousemoved', function (data, client)
+        data.connectId = client:getConnectId(),
+        self._sock:sendToAllBut(client, 'mousemoved', {
+            connectId = client:getConnectId(),
+            data = data,
+        })
     end)
 
     return self
@@ -38,21 +42,36 @@ function Client:create()
     self._sock:connect()
     print("Client connected to '" .. self.ip .. "'")
 
-    self._sock:on('keypressed', function (data)
-        print("'" .. data .. "' was pressed!")
+    self._state = setmetatable({}, { __mode = 'k' })
+
+    self._sock:on('mousemoved', function (msg)
+        local data = msg.data
+        self._state[msg.connectId] = {
+            x = data.x,
+            y = data.y,
+        }
     end)
 
     return self
 end
 
-function Client:draw() end
+function Client:draw()
+    for _, state in pairs(self._state) do
+        love.graphics.ellipse('fill', state.x, state.y, 20, 20)
+    end
+end
 
 function Client:update(dt)
     self._sock:update()
 end
 
-function Client:keypressed(k)
-    self._sock:send('keypressed', k)
+function Client:mousemoved(x, y, dx, dy)
+    local data = { x = x, y = y }
+    self._sock:send('mousemoved', data)
+    self._sock:_activateTriggers('mousemoved', {
+        connectId = self._sock:getConnectId(),
+        data = data
+    })
 end
 
 
@@ -73,6 +92,8 @@ function love.keypressed(k)
     if k == 'c' then
         client = Client.create({ ip = '192.168.1.80' })
     end
+end
 
-    if client then client:keypressed(k) end
+function love.mousemoved(x, y, dx, dy)
+    if client then client:mousemoved(x, y, dx, dy) end
 end
