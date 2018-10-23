@@ -158,7 +158,7 @@ effect.glow.min_luma = 0
 function love.update(dt)
     updatePhysics(dt)
 
-    for i = 1, 10 do
+    for i = 1, 3 do
         Speck.create({
             x = love.graphics.getWidth() * math.random(),
             y = love.graphics.getHeight() * math.random(),
