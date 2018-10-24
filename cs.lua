@@ -43,8 +43,12 @@ function love.keypressed(k)
 
     if k == 'c' then
         isClient = true
-        client.init('192.168.1.160')
+        client.init('192.168.1.80')
     end
+end
+
+function love.mousepressed(x, y, button)
+    if isClient then client.mousepressed(x, y, button) end
 end
 
 

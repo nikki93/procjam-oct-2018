@@ -2,7 +2,7 @@ local server = {}
 
 
 local sock = require 'https://raw.githubusercontent.com/camchenry/sock.lua/b4a20aadf67480e5d06bfd06727dacd167d6f0cc/sock.lua'
-local bitser = require 'https://raw.githubusercontent.com/gvx/bitser/4f2680317cdc8b6c5af7133835de5075f2cc0d1f/bitser.lua'
+local marshal = require 'marshal'
 
 
 local world, centers, specks
@@ -21,7 +21,7 @@ function Speck:create()
     self.x = self.x or 0.5 * love.graphics.getWidth()
     self.y = self.y or 0.5 * love.graphics.getHeight()
     self.radius = self.radius or 2 + 8 * math.random()
-    self.decay = self.decay or 0.3
+    self.decay = self.decay or 0.6
 
     local minDist2 = 10000000
     local cx, cy
@@ -86,6 +86,9 @@ local T = love.timer.getTime()
 function Speck:paint(commands)
     local l = 1 - self._life
     local R = love.timer.getTime() - T
+    while R > 45 do
+        R = R - 45
+    end
     commands.setColor(self.r, self.g, self.b, math.min(0.2 * l * R / 30, 0.8))
     commands.ellipse('fill', self.x, self.y, 120 * l / R, 120 * l / R)
     commands.setLineWidth(l)
@@ -96,7 +99,8 @@ end
 function server.init()
     -- Network
     conn = sock.newServer('*', 22122)
-    conn:setSerialization(bitser.dumps, bitser.loads)
+    conn:setSerialization(marshal.encode, marshal.decode)
+    conn:enableCompression()
     print("server initialized at '" .. conn:getSocketAddress() .. "'")
 
     -- Physics
@@ -120,14 +124,17 @@ function server.init()
             r = math.random(), g = math.random(), b = math.random(),
         })
     end
-    for i = 1, 80 do
-        local j = math.floor(#centers * math.random()) + 1
+
+    conn:on('mousepressed', function(data)
         table.insert(centers, {
-            x = centers[j].x + 20 * (1 - 2 * math.random()),
-            y = centers[j].y + 20 * (1 - 2 * math.random()),
+            x = data.x,
+            y = data.y,
             r = math.random(), g = math.random(), b = math.random(),
         })
-    end
+    end)
+
+    -- Start time
+    T = love.timer.getTime() - 5
 end
 
 
@@ -143,10 +150,7 @@ local funcNames = {
 
 for funcName in pairs(funcNames) do
     commands[funcName] = function(...)
-        table.insert(commandBuf, {
-            funcName = funcName,
-            args = { ... },
-        })
+        table.insert(commandBuf, { funcName, { ... } })
     end
 end
 
@@ -154,7 +158,7 @@ end
 function server.update(dt)
     world:update(dt)
 
-    for i = 1, 3 do
+    if math.random() < 0.5 then
         Speck.create({
             x = love.graphics.getWidth() * math.random(),
             y = love.graphics.getHeight() * math.random(),
@@ -170,6 +174,10 @@ function server.update(dt)
     commandBuf = {}
     for _, speck in ipairs(specks) do
         speck:paint(commands)
+    end
+    commands.setColor(1, 0, 0)
+    for _, center in ipairs(centers) do
+        commands.ellipse('fill', center.x, center.y, 10, 10)
     end
     conn:sendToAll('draw', commandBuf)
     commandBuf = {}
