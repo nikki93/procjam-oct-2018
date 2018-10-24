@@ -13,7 +13,6 @@ local conn
 function client.init(address)
     conn = sock.newClient(address, 22122)
     conn:setSerialization(marshal.encode, marshal.decode)
-    conn:enableCompression()
     conn:connect()
     print("client connected to '" .. address .. "'")
 

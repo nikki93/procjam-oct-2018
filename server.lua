@@ -100,7 +100,6 @@ function server.init()
     -- Network
     conn = sock.newServer('*', 22122)
     conn:setSerialization(marshal.encode, marshal.decode)
-    conn:enableCompression()
     print("server initialized at '" .. conn:getSocketAddress() .. "'")
 
     -- Physics
