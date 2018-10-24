@@ -187,14 +187,3 @@ function love.draw()
 --        love.graphics.ellipse('fill', center.x, center.y, 2, 2)
 --    end
 end
-
-function love.mousemoved(x, y, dx, dy)
-    if love.mouse.isDown(1) then
-        for i = 1, 3 do
-            Speck.create({
-                x = x + 5 * (1 - 2 * math.random()),
-                y = y + 5 * (1 - 2 * math.random()),
-            })
-        end
-    end
-end
