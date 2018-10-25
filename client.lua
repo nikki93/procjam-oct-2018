@@ -10,6 +10,8 @@ local layer
 local conn
 
 
+local nDraws = 0
+
 function client.init(address)
     conn = sock.newClient(address, 22122)
     conn:setSerialization(marshal.encode, marshal.decode)
@@ -19,6 +21,7 @@ function client.init(address)
     layer = love.graphics.newCanvas()
 
     conn:on('draw', function(commands)
+        nDraws = nDraws + 1
         layer:renderTo(function()
             love.graphics.stacked('all', function()
                 for _, command in ipairs(commands) do
@@ -35,6 +38,11 @@ end
 
 function client.draw()
     love.graphics.draw(layer, 0, 0)
+
+    love.graphics.print('ping: ' .. conn:getRoundTripTime(), 20, 20)
+    love.graphics.print('fps: ' .. love.timer.getFPS(), 20, 80)
+    love.graphics.print('draws: ' .. nDraws, 20, 120)
+    nDraws = 0
 end
 
 function client.mousepressed(x, y)
