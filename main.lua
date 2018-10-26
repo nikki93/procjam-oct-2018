@@ -181,7 +181,9 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.draw(layer, 0, 0)
+    love.graphics.draw(layer,
+        0.5 * (love.graphics.getWidth() - layer:getWidth()),
+        0.5 * (love.graphics.getHeight() - layer:getHeight()))
 
 --    for _, center in ipairs(centers) do
 --        love.graphics.ellipse('fill', center.x, center.y, 2, 2)
