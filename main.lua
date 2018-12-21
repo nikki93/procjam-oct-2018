@@ -139,13 +139,12 @@ function Speck:update(dt)
     return true
 end
 
-local T = love.timer.getTime()
+local R = 0
 
 function Speck:paint()
     local l = 1 - self._life
-    local R = love.timer.getTime() - T
     love.graphics.setColor(self.r, self.g, self.b, math.min(0.2 * l * R / 30, 0.8))
-    love.graphics.ellipse('fill', self.x, self.y, 120 * l / R, 120 * l / R)
+    love.graphics.circle('fill', self.x, self.y, 120 * l / R)
     love.graphics.setLineWidth(l)
     love.graphics.line(self._prevX, self._prevY, self.x, self.y)
 end
@@ -156,6 +155,8 @@ local effect = moonshine(moonshine.effects.glow)
 effect.glow.min_luma = 0
 
 function love.update(dt)
+    R = R + dt
+
     updatePhysics(dt)
 
     for i = 1, 3 do
@@ -188,4 +189,8 @@ function love.draw()
 --    for _, center in ipairs(centers) do
 --        love.graphics.ellipse('fill', center.x, center.y, 2, 2)
 --    end
+end
+
+for i = 1, 120 do
+    love.update(1/60)
 end
